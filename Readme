@@ -1,0 +1,4 @@
+git remote add jtbdev https://github.com/<source-owner>/jtbdev-newsletter.git
+git fetch jtbdev
+git checkout -b jtbdev-newsletter jtbdev/main
+git push origin jtbdev-newsletter
