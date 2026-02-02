@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Time Tracker</title>
+    <script src="https://apis.google.com/js/api.js"></script>
     <style>
         * {
             margin: 0;
@@ -410,6 +411,26 @@
             text-align: center;
         }
 
+        .status-text.ready {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .mic-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
         .manual-input {
             display: flex;
             gap: 10px;
@@ -634,7 +655,7 @@
                     <div class="message assistant-message">
                         <div class="assistant-avatar">🤖</div>
                         <div class="assistant-text">
-                            Hi! I'm your time tracking assistant. Click the microphone button and tell me about your first time entry when you're ready. I'll ask you questions to capture all the details.
+                            Hi! I'm your time tracking assistant. I'll ask for microphone permission once, then you can use voice input anytime. Click the microphone button when you're ready to start your first entry!
                         </div>
                     </div>
                 </div>
@@ -723,6 +744,31 @@
             </div>
 
             <div class="settings-section">
+                <h3>Google Drive Integration</h3>
+                <p>Automatically save exported CSV files to Google Drive.</p>
+                
+                <div class="toggle-switch" style="margin-bottom: 15px;">
+                    <label class="switch">
+                        <input type="checkbox" id="driveToggle" onchange="toggleGoogleDrive()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="driveStatus">
+                        <span class="notification-badge badge-disabled">Not Connected</span>
+                    </span>
+                </div>
+
+                <div id="driveSetup" class="hidden">
+                    <div class="alert-box" style="margin-bottom: 15px;">
+                        <strong>ℹ️ Setup Required</strong>
+                        To use Google Drive integration, you'll need to set up Google API credentials. Click the button below for instructions.
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="showDriveSetupInstructions()">
+                        View Setup Instructions
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <h3>Daily Reminders</h3>
                 <p>Get notified every day to track your time entries.</p>
                 
@@ -795,6 +841,15 @@
     </div>
 
     <script>
+        // Google Drive API Configuration
+        const GOOGLE_CLIENT_ID = '793659536177-g3e47i0ckqsi7fvun2ntps35dr4h2is1.apps.googleusercontent.com'; // User will need to replace this
+        const GOOGLE_API_KEY = 'AIzaSyD_G5NSdYM1BypLyqBjvLKsRkOhLn7rM6Y'; // User will need to replace this
+        const GOOGLE_DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+        const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+        let isGoogleDriveReady = false;
+        let isGoogleSignedIn = false;
+
         // Speech Recognition Setup
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
@@ -823,9 +878,13 @@
             checkBrowserSupport();
             loadEntries();
             loadNotificationSettings();
+            loadGoogleDriveSettings();
             renderEntries();
             checkDailyReminder();
             updateNotificationUI();
+            
+            // Initialize Google API
+            gapi.load('client:auth2', initGoogleDrive);
             
             // Show notification alert if not enabled
             if (!notificationSettings.enabled && 'Notification' in window) {
@@ -858,12 +917,44 @@
             recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
                 stopListening();
-                updateStatus('Error occurred. Please try again.');
+                if (event.error === 'not-allowed') {
+                    updateStatus('Microphone access denied. Please enable in browser settings.');
+                } else {
+                    updateStatus('Error occurred. Click to try again.');
+                }
             };
 
             recognition.onend = () => {
                 stopListening();
             };
+
+            // Request microphone permission immediately
+            requestMicrophonePermission();
+        }
+
+        async function requestMicrophonePermission() {
+            try {
+                // Request microphone access using getUserMedia
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Stop the stream immediately - we just needed permission
+                stream.getTracks().forEach(track => track.stop());
+                
+                // Update UI to show mic is ready
+                updateStatus('Microphone ready! Click to start speaking', true);
+                
+                // Store permission status
+                localStorage.setItem('micPermissionGranted', 'true');
+            } catch (error) {
+                console.error('Microphone permission error:', error);
+                updateStatus('Please allow microphone access to use voice mode');
+                
+                // Show a helpful message
+                setTimeout(() => {
+                    if (confirm('This app needs microphone access for voice input. Would you like to switch to Manual Mode instead?')) {
+                        setMode('manual');
+                    }
+                }, 1000);
+            }
         }
 
         function toggleListening() {
@@ -894,7 +985,14 @@
             isListening = false;
             document.getElementById('voiceBtn').classList.remove('listening');
             document.getElementById('voiceBtn').textContent = '🎤';
-            updateStatus('Click to start speaking');
+            
+            // Check if we have permission
+            const hasPermission = localStorage.getItem('micPermissionGranted') === 'true';
+            if (hasPermission) {
+                updateStatus('Microphone ready! Click to start speaking', true);
+            } else {
+                updateStatus('Click to start speaking');
+            }
             
             if (recognition) {
                 try {
@@ -905,8 +1003,16 @@
             }
         }
 
-        function updateStatus(text) {
-            document.getElementById('statusText').textContent = text;
+        function updateStatus(text, isReady = false) {
+            const statusElement = document.getElementById('statusText');
+            
+            if (isReady) {
+                statusElement.innerHTML = '<span class="mic-indicator"></span>' + text;
+                statusElement.classList.add('ready');
+            } else {
+                statusElement.textContent = text;
+                statusElement.classList.remove('ready');
+            }
         }
 
         function handleVoiceInput(transcript) {
@@ -1042,7 +1148,7 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        function setMode(mode) {
+        function setMode(mode, event) {
             currentMode = mode;
             
             document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -1052,11 +1158,21 @@
             if (mode === 'voice') {
                 document.getElementById('voiceMode').classList.remove('hidden');
                 document.getElementById('manualMode').classList.add('hidden');
-                event.target.classList.add('active');
+                // Find and activate the voice mode button
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    if (btn.textContent.includes('Voice')) {
+                        btn.classList.add('active');
+                    }
+                });
             } else {
                 document.getElementById('voiceMode').classList.add('hidden');
                 document.getElementById('manualMode').classList.remove('hidden');
-                event.target.classList.add('active');
+                // Find and activate the manual mode button
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    if (btn.textContent.includes('Manual')) {
+                        btn.classList.add('active');
+                    }
+                });
             }
         }
 
@@ -1209,8 +1325,26 @@
                 csv += `"${entry.clientName}","${entry.clientMatter}","${entry.timeType}",${entry.totalTime},${narrative}\n`;
             });
 
-            downloadFile('time-entries.csv', csv);
-            alert('CSV file downloaded!');
+            const filename = `time-entries-${new Date().toISOString().split('T')[0]}.csv`;
+
+            // Check if Google Drive is enabled and connected
+            if (isGoogleSignedIn && document.getElementById('driveToggle').checked) {
+                uploadToDrive(filename, csv, 'text/csv').then(result => {
+                    if (result) {
+                        // Also download locally as backup
+                        downloadFile(filename, csv);
+                        alert('CSV saved to Google Drive and downloaded locally!');
+                    } else {
+                        // Fall back to local download only
+                        downloadFile(filename, csv);
+                        alert('CSV file downloaded locally (Google Drive upload failed)');
+                    }
+                });
+            } else {
+                // Just download locally
+                downloadFile(filename, csv);
+                alert('CSV file downloaded!');
+            }
         }
 
         function downloadFile(filename, content) {
@@ -1383,6 +1517,165 @@
             const json = JSON.stringify(backup, null, 2);
             downloadFile('time-tracker-backup.json', json);
             alert('Backup downloaded successfully!');
+        }
+
+        // Google Drive Functions
+        function initGoogleDrive() {
+            // Check if API credentials are configured
+            if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE' || GOOGLE_API_KEY === 'YOUR_API_KEY_HERE') {
+                console.log('Google Drive API credentials not configured');
+                isGoogleDriveReady = false;
+                return;
+            }
+
+            gapi.client.init({
+                apiKey: GOOGLE_API_KEY,
+                clientId: GOOGLE_CLIENT_ID,
+                discoveryDocs: GOOGLE_DISCOVERY_DOCS,
+                scope: GOOGLE_SCOPES
+            }).then(() => {
+                isGoogleDriveReady = true;
+                
+                // Listen for sign-in state changes
+                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+                
+                // Handle initial sign-in state
+                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+            }).catch(error => {
+                console.error('Error initializing Google Drive API:', error);
+                isGoogleDriveReady = false;
+            });
+        }
+
+        function updateSigninStatus(isSignedIn) {
+            isGoogleSignedIn = isSignedIn;
+            updateDriveUI();
+        }
+
+        function toggleGoogleDrive() {
+            const isEnabled = document.getElementById('driveToggle').checked;
+            
+            if (!isGoogleDriveReady) {
+                document.getElementById('driveToggle').checked = false;
+                document.getElementById('driveSetup').classList.remove('hidden');
+                return;
+            }
+            
+            if (isEnabled && !isGoogleSignedIn) {
+                signInToGoogleDrive();
+            } else if (!isEnabled && isGoogleSignedIn) {
+                signOutFromGoogleDrive();
+            }
+            
+            localStorage.setItem('googleDriveEnabled', isEnabled);
+        }
+
+        function signInToGoogleDrive() {
+            gapi.auth2.getAuthInstance().signIn().then(() => {
+                updateDriveUI();
+                alert('Successfully connected to Google Drive!');
+            }).catch(error => {
+                console.error('Error signing in:', error);
+                document.getElementById('driveToggle').checked = false;
+                alert('Failed to connect to Google Drive. Please try again.');
+            });
+        }
+
+        function signOutFromGoogleDrive() {
+            gapi.auth2.getAuthInstance().signOut().then(() => {
+                updateDriveUI();
+            });
+        }
+
+        function updateDriveUI() {
+            const toggle = document.getElementById('driveToggle');
+            const status = document.getElementById('driveStatus');
+            
+            if (isGoogleSignedIn) {
+                toggle.checked = true;
+                status.innerHTML = '<span class="notification-badge badge-enabled">Connected</span>';
+                document.getElementById('driveSetup').classList.add('hidden');
+            } else {
+                toggle.checked = false;
+                status.innerHTML = '<span class="notification-badge badge-disabled">Not Connected</span>';
+            }
+        }
+
+        function loadGoogleDriveSettings() {
+            const enabled = localStorage.getItem('googleDriveEnabled') === 'true';
+            if (enabled && isGoogleDriveReady && !isGoogleSignedIn) {
+                // Auto sign-in if previously enabled
+                setTimeout(() => {
+                    signInToGoogleDrive();
+                }, 1000);
+            }
+        }
+
+        async function uploadToDrive(filename, content, mimeType) {
+            if (!isGoogleSignedIn) {
+                console.error('Not signed in to Google Drive');
+                return false;
+            }
+
+            try {
+                const boundary = '-------314159265358979323846';
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+
+                const metadata = {
+                    name: filename,
+                    mimeType: mimeType
+                };
+
+                const multipartRequestBody =
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    JSON.stringify(metadata) +
+                    delimiter +
+                    'Content-Type: ' + mimeType + '\r\n\r\n' +
+                    content +
+                    close_delim;
+
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    headers: {
+                        'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+                    },
+                    body: multipartRequestBody
+                });
+
+                return response.result;
+            } catch (error) {
+                console.error('Error uploading to Drive:', error);
+                return false;
+            }
+        }
+
+        function showDriveSetupInstructions() {
+            const instructions = `
+Google Drive Setup Instructions:
+
+1. Go to: https://console.cloud.google.com/
+2. Create a new project or select an existing one
+3. Enable the Google Drive API
+4. Go to "Credentials" → "Create Credentials" → "OAuth client ID"
+5. Choose "Web application"
+6. Add your GitHub Pages URL to "Authorized JavaScript origins":
+   https://YOUR-USERNAME.github.io
+7. Add redirect URI:
+   https://YOUR-USERNAME.github.io/professional_hub
+8. Copy the Client ID and API Key
+9. Edit index.html and replace:
+   - YOUR_CLIENT_ID_HERE with your Client ID
+   - YOUR_API_KEY_HERE with your API Key
+10. Commit and push to GitHub
+
+After setup, refresh the page and toggle Google Drive integration.
+            `;
+            
+            alert(instructions);
         }
 
         // Initialize notifications on load
