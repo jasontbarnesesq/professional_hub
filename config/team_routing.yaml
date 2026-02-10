@@ -1,0 +1,84 @@
+# Team Routing Configuration
+# Maps folder patterns to responsible team members for task assignment.
+
+# Escalation levels:
+#   1 = routine (paralegal/assistant can handle)
+#   2 = review required (associate/compliance officer)
+#   3 = urgent (senior counsel/partner)
+
+assignments:
+
+  # Regulatory materials — senior review
+  - pattern: "02_Regulatory/01_SEC/Enforcement_Actions"
+    assigned_to: "senior_counsel"
+    escalation_level: 3
+    notify: ["senior_counsel", "managing_partner"]
+
+  - pattern: "02_Regulatory/01_SEC"
+    assigned_to: "senior_counsel"
+    escalation_level: 2
+    notify: ["senior_counsel"]
+
+  - pattern: "02_Regulatory/02_FINRA/Disciplinary"
+    assigned_to: "senior_counsel"
+    escalation_level: 3
+    notify: ["senior_counsel", "managing_partner"]
+
+  - pattern: "02_Regulatory/02_FINRA"
+    assigned_to: "compliance_manager"
+    escalation_level: 2
+    notify: ["compliance_manager"]
+
+  # Regulatory exams — highest priority
+  - pattern: "03_Compliance_Programs/05_Regulatory_Exams"
+    assigned_to: "senior_counsel"
+    escalation_level: 3
+    notify: ["senior_counsel", "managing_partner", "compliance_manager"]
+
+  # Compliance programs — compliance team
+  - pattern: "03_Compliance_Programs"
+    assigned_to: "compliance_manager"
+    escalation_level: 2
+    notify: ["compliance_manager"]
+
+  # Client matters — paralegal with attorney review
+  - pattern: "01_Clients/.*/02_Matters"
+    assigned_to: "paralegal"
+    escalation_level: 1
+    notify: ["paralegal", "assigned_attorney"]
+
+  # Engagement letters — attorney required
+  - pattern: "01_Clients/.*/01_Engagement_Letters"
+    assigned_to: "senior_counsel"
+    escalation_level: 2
+    notify: ["senior_counsel"]
+
+  # Billing — office admin
+  - pattern: "01_Clients/.*/03_Billing"
+    assigned_to: "office_manager"
+    escalation_level: 1
+    notify: ["office_manager"]
+
+  # Forms and templates — paralegal
+  - pattern: "04_Forms_Templates"
+    assigned_to: "paralegal"
+    escalation_level: 1
+    notify: ["paralegal"]
+
+  # Unsorted/review queue — office manager first pass
+  - pattern: "09_Inbox"
+    assigned_to: "office_manager"
+    escalation_level: 1
+    notify: ["office_manager"]
+
+  # Default catch-all
+  - pattern: ".*"
+    assigned_to: "office_manager"
+    escalation_level: 1
+    notify: ["office_manager"]
+
+# Escalation timeframes
+escalation_rules:
+  pending_review_max_hours: 48
+  urgent_response_max_hours: 4
+  regulatory_exam_max_hours: 2

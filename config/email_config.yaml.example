@@ -1,0 +1,42 @@
+# Email Ingestion Configuration
+# Copy this file to email_config.yaml and fill in your credentials.
+# DO NOT commit the actual config file with credentials.
+
+email:
+  server: "imap.example.com"
+  username: "compliance@yourfirm.com"
+  password: "YOUR_PASSWORD_HERE"     # Consider using environment variables instead
+  folder: "INBOX"
+
+poll_interval_seconds: 300  # Check every 5 minutes
+
+# Routing rules: regex patterns matched against email fields
+routing:
+  sender_rules:
+    "sec\\.gov$": "02_Regulatory/01_SEC/"
+    "finra\\.org$": "02_Regulatory/02_FINRA/"
+    "@nasaa\\.org$": "02_Regulatory/03_State_Regulators/"
+
+  subject_rules:
+    "(?i)form.?adv": "04_Forms_Templates/01_Registration/Form_ADV/"
+    "(?i)deficiency": "03_Compliance_Programs/05_Regulatory_Exams/SEC_Exams/"
+    "(?i)8210|document.?request": "03_Compliance_Programs/05_Regulatory_Exams/FINRA_Exams/"
+    "(?i)invoice|billing|payment": "01_Clients/_TRIAGE/03_Billing/"
+    "(?i)engagement.?letter|retainer": "01_Clients/_TRIAGE/01_Engagement_Letters/"
+    "(?i)annual.?review|compliance.?review": "03_Compliance_Programs/02_Annual_Reviews/"
+    "(?i)training|CLE|webinar": "03_Compliance_Programs/03_Training_Materials/"
+
+  keyword_rules:
+    "(?i)anti.?money.?launder|AML|BSA|suspicious.?activity": "03_Compliance_Programs/01_Policies_Procedures/AML_BSA/"
+    "(?i)insider.?trad|MNPI": "03_Compliance_Programs/01_Policies_Procedures/Insider_Trading/"
+    "(?i)cybersecurity|data.?breach": "03_Compliance_Programs/01_Policies_Procedures/Cybersecurity/"
+
+# Team assignment rules: regex on destination path -> team member
+team_assignments:
+  "02_Regulatory/01_SEC": "senior_counsel"
+  "02_Regulatory/02_FINRA": "compliance_manager"
+  "03_Compliance_Programs/05_Regulatory_Exams": "senior_counsel"
+  "03_Compliance_Programs/01_Policies": "compliance_manager"
+  "01_Clients": "paralegal"
+  "04_Forms_Templates": "paralegal"
+  ".*": "office_manager"   # Default assignment

@@ -1,0 +1,241 @@
+# Classification Rules for Automated File Categorization
+# Each rule has: pattern (regex), target folder, confidence weight, and rule type.
+
+# Rule types:
+#   filename  — matches against the filename
+#   content   — matches against extracted text content
+#   extension — matches against file extension
+#   metadata  — matches against file metadata (author, title, etc.)
+#   email     — matches against parsed email fields
+
+rules:
+
+  # --- Engagement Letters ---
+  - name: engagement_letter_filename
+    type: filename
+    pattern: "(?i)(engagement|retainer|fee.?agreement).*letter"
+    target: "01_Clients/{client}/01_Engagement_Letters/"
+    confidence: 0.90
+
+  - name: engagement_letter_content
+    type: content
+    pattern: "(?i)(hereby retain|scope of engagement|legal fees|retainer agreement)"
+    target: "01_Clients/{client}/01_Engagement_Letters/"
+    confidence: 0.75
+
+  # --- Correspondence ---
+  - name: correspondence_email
+    type: email
+    pattern: ".*"
+    target: "01_Clients/{client}/02_Matters/{matter}/01_Correspondence/"
+    confidence: 0.60
+    conditions:
+      - has_client_identifier: true
+
+  - name: correspondence_letter
+    type: filename
+    pattern: "(?i)(letter|memo|correspondence).*to.*"
+    target: "01_Clients/{client}/02_Matters/{matter}/01_Correspondence/"
+    confidence: 0.70
+
+  # --- Pleadings & Filings ---
+  - name: pleading_filename
+    type: filename
+    pattern: "(?i)(complaint|answer|motion|brief|petition|response|reply|order|stipulation)"
+    target: "01_Clients/{client}/02_Matters/{matter}/02_Pleadings_Filings/"
+    confidence: 0.85
+
+  - name: sec_filing
+    type: filename
+    pattern: "(?i)(form.?(adv|bd|u4|u5|13[fFdDgG])|schedule.?(13|14)|reg.?(s-p|s-id|BI))"
+    target: "04_Forms_Templates/01_Registration/"
+    confidence: 0.90
+
+  # --- Discovery ---
+  - name: discovery_filename
+    type: filename
+    pattern: "(?i)(interrogator|document.?request|subpoena|deposition|production|RFP|RFA)"
+    target: "01_Clients/{client}/02_Matters/{matter}/03_Discovery/"
+    confidence: 0.85
+
+  # --- Research Memos ---
+  - name: research_memo
+    type: filename
+    pattern: "(?i)(research|memo|analysis|legal.?memo|issue.?memo)"
+    target: "01_Clients/{client}/02_Matters/{matter}/04_Research_Memos/"
+    confidence: 0.70
+
+  # --- SEC Materials ---
+  - name: sec_rule_release
+    type: filename
+    pattern: "(?i)(rule|release|34-|33-|IA-|IC-)\\d+"
+    target: "02_Regulatory/01_SEC/Rules_Releases/"
+    confidence: 0.85
+
+  - name: sec_no_action
+    type: filename
+    pattern: "(?i)no.?action"
+    target: "02_Regulatory/01_SEC/No_Action_Letters/"
+    confidence: 0.90
+
+  - name: sec_enforcement
+    type: filename
+    pattern: "(?i)(enforcement|litigation.?release|admin.?proc|cease.?and.?desist|OIP)"
+    target: "02_Regulatory/01_SEC/Enforcement_Actions/"
+    confidence: 0.85
+
+  - name: sec_comment_letter
+    type: filename
+    pattern: "(?i)comment.?letter"
+    target: "02_Regulatory/01_SEC/Comment_Letters/"
+    confidence: 0.90
+
+  - name: sec_staff_guidance
+    type: content
+    pattern: "(?i)(staff.?bulletin|IM.?guidance|staff.?no-action|FAQ|interpretive)"
+    target: "02_Regulatory/01_SEC/Staff_Guidance/"
+    confidence: 0.70
+
+  # --- FINRA Materials ---
+  - name: finra_rule
+    type: filename
+    pattern: "(?i)finra.?rule"
+    target: "02_Regulatory/02_FINRA/Rules/"
+    confidence: 0.85
+
+  - name: finra_regulatory_notice
+    type: filename
+    pattern: "(?i)(reg.?notice|regulatory.?notice|information.?notice)"
+    target: "02_Regulatory/02_FINRA/Regulatory_Notices/"
+    confidence: 0.85
+
+  - name: finra_disciplinary
+    type: filename
+    pattern: "(?i)(disciplinary|sanction|AWC|consent.?order)"
+    target: "02_Regulatory/02_FINRA/Disciplinary_Actions/"
+    confidence: 0.85
+
+  # --- Compliance Programs ---
+  - name: wsp
+    type: filename
+    pattern: "(?i)(WSP|written.?supervisory|supervisory.?procedure)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Written_Supervisory_Procedures/"
+    confidence: 0.90
+
+  - name: code_of_ethics
+    type: filename
+    pattern: "(?i)(code.?of.?ethics|personal.?trading|access.?person)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Code_of_Ethics/"
+    confidence: 0.90
+
+  - name: aml_bsa
+    type: filename
+    pattern: "(?i)(AML|anti.?money|BSA|bank.?secrecy|suspicious.?activity|SAR|CTR)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/AML_BSA/"
+    confidence: 0.90
+
+  - name: insider_trading
+    type: filename
+    pattern: "(?i)(insider.?trad|MNPI|material.?non.?public|information.?barrier|chinese.?wall)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Insider_Trading/"
+    confidence: 0.90
+
+  - name: bcp
+    type: filename
+    pattern: "(?i)(BCP|business.?continuity|disaster.?recovery)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Business_Continuity/"
+    confidence: 0.90
+
+  - name: cybersecurity_policy
+    type: filename
+    pattern: "(?i)(cybersecurity|incident.?response|data.?breach|information.?security)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Cybersecurity/"
+    confidence: 0.85
+
+  - name: privacy_policy
+    type: filename
+    pattern: "(?i)(privacy|reg.?s-p|reg.?s-id|identity.?theft|safeguard)"
+    target: "03_Compliance_Programs/01_Policies_Procedures/Privacy/"
+    confidence: 0.85
+
+  - name: annual_review
+    type: filename
+    pattern: "(?i)(annual.?review|206\\(4\\).?7|rule.?38a-1|compliance.?review)"
+    target: "03_Compliance_Programs/02_Annual_Reviews/"
+    confidence: 0.85
+
+  - name: training_materials
+    type: filename
+    pattern: "(?i)(training|compliance.?training|quiz|attendance|sign.?in.?sheet)"
+    target: "03_Compliance_Programs/03_Training_Materials/"
+    confidence: 0.80
+
+  - name: exam_sec
+    type: filename
+    pattern: "(?i)(OCIE|SEC.?exam|presence.?exam|deficiency.?letter)"
+    target: "03_Compliance_Programs/05_Regulatory_Exams/SEC_Exams/"
+    confidence: 0.85
+
+  - name: exam_finra
+    type: filename
+    pattern: "(?i)(FINRA.?exam|cycle.?exam|cause.?exam|8210)"
+    target: "03_Compliance_Programs/05_Regulatory_Exams/FINRA_Exams/"
+    confidence: 0.85
+
+  # --- Forms & Templates ---
+  - name: form_adv
+    type: filename
+    pattern: "(?i)form.?adv"
+    target: "04_Forms_Templates/01_Registration/Form_ADV/"
+    confidence: 0.90
+
+  - name: form_bd
+    type: filename
+    pattern: "(?i)form.?bd"
+    target: "04_Forms_Templates/01_Registration/Form_BD/"
+    confidence: 0.90
+
+  - name: form_u4_u5
+    type: filename
+    pattern: "(?i)form.?(u4|u5)"
+    target: "04_Forms_Templates/01_Registration/Form_U4_U5/"
+    confidence: 0.90
+
+  - name: form_13
+    type: filename
+    pattern: "(?i)(form.?13[fFdDgG]|schedule.?13)"
+    target: "04_Forms_Templates/01_Registration/Form_13F_13D_13G/"
+    confidence: 0.85
+
+  # --- Research & CLE ---
+  - name: cle_materials
+    type: filename
+    pattern: "(?i)(CLE|continuing.?legal|MCLE|webinar|seminar)"
+    target: "05_Research/03_CLE_Materials/"
+    confidence: 0.80
+
+  # --- Billing ---
+  - name: billing
+    type: filename
+    pattern: "(?i)(invoice|billing|fee.?statement|payment|retainer.?balance)"
+    target: "01_Clients/{client}/03_Billing/"
+    confidence: 0.80
+
+  # --- Catch-all by extension ---
+  - name: spreadsheet_default
+    type: extension
+    pattern: "\\.(xlsx?|csv)$"
+    target: "09_Inbox/02_Pending_Review/"
+    confidence: 0.30
+
+  - name: document_default
+    type: extension
+    pattern: "\\.(docx?|pdf|rtf|txt)$"
+    target: "09_Inbox/02_Pending_Review/"
+    confidence: 0.20
+
+  - name: email_default
+    type: extension
+    pattern: "\\.(eml|msg)$"
+    target: "09_Inbox/02_Pending_Review/"
+    confidence: 0.25

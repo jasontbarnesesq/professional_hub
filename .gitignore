@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Practice data (do not commit actual client files)
+Practice_Root/
+_duplicates/
+inventory.csv
+
+# Reports (generated, may contain file paths)
+reports/*.csv
+reports/*.jsonl
+
+# Config with credentials
+config/email_config.yaml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,168 @@
+# Securities Compliance Practice — Folder Taxonomy
+# This file defines the canonical directory structure.
+# Used by scripts/04_create_structure.py to generate folders.
+
+root: Practice_Root
+
+structure:
+  01_Clients:
+    _description: "Client-specific files organized by client ID"
+    _template: "{ClientID}_{ClientName}"
+    children:
+      01_Engagement_Letters:
+        _description: "Signed engagement letters and amendments"
+      02_Matters:
+        _template: "{MatterID}_{MatterType}_{YYYY-MM}"
+        children:
+          01_Correspondence:
+            _description: "Client and opposing counsel correspondence"
+          02_Pleadings_Filings:
+            _description: "Court and regulatory filings"
+          03_Discovery:
+            _description: "Discovery requests, responses, document productions"
+          04_Research_Memos:
+            _description: "Internal research and legal memoranda"
+          05_Work_Product:
+            _description: "Draft and final work product"
+          06_Exhibits:
+            _description: "Exhibits, appendices, supporting documents"
+          07_Court_Orders:
+            _description: "Orders, judgments, rulings"
+          08_Closing:
+            _description: "Closing documents, final summaries"
+      03_Billing:
+        _description: "Invoices, payment records, fee agreements"
+      04_Conflicts:
+        _description: "Conflict check records and waivers"
+
+  02_Regulatory:
+    _description: "Regulatory body materials organized by agency"
+    children:
+      01_SEC:
+        children:
+          Rules_Releases:
+            _description: "Final and proposed rules, releases"
+          No_Action_Letters:
+            _description: "Staff no-action letters"
+          Enforcement_Actions:
+            _description: "Administrative proceedings, litigation releases"
+          Staff_Guidance:
+            _description: "Staff bulletins, FAQs, interpretive guidance"
+          Comment_Letters:
+            _description: "Submitted and received comment letters"
+      02_FINRA:
+        children:
+          Rules:
+            _description: "FINRA rulebook, rule amendments"
+          Regulatory_Notices:
+            _description: "Reg notices, information notices"
+          Disciplinary_Actions:
+            _description: "Disciplinary proceedings and sanctions"
+          Guidance:
+            _description: "Interpretive letters, FAQ"
+      03_State_Regulators:
+        _description: "State securities regulators (NASAA, individual states)"
+      04_DOJ:
+        _description: "Department of Justice materials"
+      05_Other_SROs:
+        _description: "MSRB, CBOE, NFA, CME, other SRO materials"
+
+  03_Compliance_Programs:
+    _description: "Compliance program materials for clients and firm"
+    children:
+      01_Policies_Procedures:
+        children:
+          Written_Supervisory_Procedures:
+            _description: "WSPs for broker-dealers"
+          Code_of_Ethics:
+            _description: "Code of ethics, personal trading policies"
+          AML_BSA:
+            _description: "Anti-money laundering, Bank Secrecy Act programs"
+          Insider_Trading:
+            _description: "Insider trading policies, information barriers"
+          Business_Continuity:
+            _description: "BCP and disaster recovery plans"
+          Cybersecurity:
+            _description: "Cybersecurity policies, incident response plans"
+          Privacy:
+            _description: "Privacy policies, Reg S-P, Reg S-ID"
+      02_Annual_Reviews:
+        _description: "Annual compliance reviews (Rule 206(4)-7, FINRA 3120)"
+      03_Training_Materials:
+        _description: "Compliance training decks, quizzes, attendance records"
+      04_Testing_Surveillance:
+        _description: "Branch exam results, trade surveillance, testing reports"
+      05_Regulatory_Exams:
+        children:
+          SEC_Exams:
+            _description: "SEC/OCIE exam correspondence, document requests, deficiency letters"
+          FINRA_Exams:
+            _description: "FINRA cycle exams, cause exams"
+          State_Exams:
+            _description: "State regulatory examinations"
+
+  04_Forms_Templates:
+    _description: "Reusable forms, templates, and checklists"
+    children:
+      01_Registration:
+        children:
+          Form_ADV:
+            _description: "Form ADV Parts 1, 2A, 2B, CRS"
+          Form_BD:
+            _description: "Broker-dealer registration"
+          Form_U4_U5:
+            _description: "Representative registration and termination"
+          Form_13F_13D_13G:
+            _description: "Beneficial ownership and institutional holdings"
+      02_Disclosure:
+        _description: "Disclosure templates, brochure supplements"
+      03_Client_Agreements:
+        _description: "Advisory agreements, sub-advisory agreements, IMA templates"
+      04_Internal_Checklists:
+        _description: "New client onboarding, matter opening, closing checklists"
+      05_Memo_Templates:
+        _description: "Research memo, client memo, regulatory response templates"
+
+  05_Research:
+    _description: "Legal research, publications, CLE materials"
+    children:
+      01_Legal_Research:
+        _description: "Case law, statutory analysis, regulatory interpretation"
+      02_Industry_Reports:
+        _description: "Industry studies, market analysis, risk assessments"
+      03_CLE_Materials:
+        _description: "Continuing legal education course materials"
+      04_Publications:
+        _description: "Articles, blog posts, client alerts authored by the firm"
+
+  06_Firm_Administration:
+    _description: "Internal firm operations"
+    children:
+      01_HR:
+        _description: "Employment records, policies, benefits"
+      02_Finance:
+        _description: "Firm financials, budgets, tax records"
+      03_IT:
+        _description: "IT policies, vendor contracts, system documentation"
+      04_Insurance:
+        _description: "E&O, cyber, general liability policies"
+      05_Marketing:
+        _description: "Marketing materials, website content, advertising review"
+
+  07_Active_Projects:
+    _description: "Current non-client projects and initiatives"
+    _template: "{ProjectID}_{Description}_{YYYY-MM}"
+
+  08_Archive:
+    _description: "Closed matters and historical records"
+    _template: "{Year}/{ClientID}_{MatterID}"
+
+  09_Inbox:
+    _description: "Temporary holding area for incoming files"
+    children:
+      01_Unsorted:
+        _description: "New files awaiting classification"
+      02_Pending_Review:
+        _description: "Files classified by automation, awaiting human review"
+      03_Pending_Filing:
+        _description: "Files reviewed and approved, awaiting final filing"
